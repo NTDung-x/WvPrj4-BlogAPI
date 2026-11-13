@@ -1,4 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
+import 'dotenv/config';
+import pool from './db.js';
 
 const app = express();
 const PORT = 3000;
@@ -10,18 +12,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Route bình thường
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK' });
+// Route health
+app.get('/api/health', async (req: Request, res: Response) => {
+  const [rows] = await pool.query('SELECT 1 + 1 AS result');
+  res.json({ status: 'OK', database: 'Connected', testQuery: rows });
 });
 
-// Route bất đồng bộ, async, phát sinh lỗi
-app.get('/api/test-error', async (req: Request, res: Response) => {
-  // Giả lập một thao tác database bị lỗi
-  throw new Error('Không thể kết nối tới cơ sở dữ liệu');
-});
-
-// Middleware bắt lỗi 404, chạy khi không có route nào phía trên khớp với URL
+// Middleware lỗi 404, chạy khi không có route nào phía trên khớp với URL
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     success: false,
@@ -38,6 +35,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on: http://localhost:${PORT}`);
-});
+// Kiểm tra kết nối
+async function startServer() {
+  try{
+    const connection = await pool.getConnection();
+    console.log ('Connected to blog_db on MySQL')
+    connection.release();
+
+    app.listen(PORT, () => {
+      console.log(`Server is running on: http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error ('Connection error: ', error);
+    process.exit(1);
+  };
+}
+
+startServer();
