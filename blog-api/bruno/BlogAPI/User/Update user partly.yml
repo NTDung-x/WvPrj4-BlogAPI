@@ -1,0 +1,19 @@
+info:
+  name: Update user partly
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/api/users/1"
+  body:
+    type: json
+    data: '{"name": "Dung Nguyen test PATCH"}'
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

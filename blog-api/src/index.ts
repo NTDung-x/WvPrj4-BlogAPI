@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 import pool from './db.js';
+import userRouter from './routes/user.routes.js';
 
 const app = express();
 const PORT = 3000;
@@ -15,8 +16,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Route health
 app.get('/api/health', async (req: Request, res: Response) => {
   const [rows] = await pool.query('SELECT 1 + 1 AS result');
-  res.json({ status: 'OK', database: 'Connected', testQuery: rows });
+  res.json({ 
+    status: 'OK', 
+    database: 'Connected', 
+    testQuery: rows 
+  });
 });
+
+app.use('/api/users', userRouter);
 
 // Middleware lỗi 404, chạy khi không có route nào phía trên khớp với URL
 app.use((req: Request, res: Response) => {
