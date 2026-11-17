@@ -1,11 +1,11 @@
 info:
   name: Update user
   type: http
-  seq: 3
+  seq: 4
 
 http:
   method: PUT
-  url: "{{baseUrl}}/api/users/1"
+  url: "{{baseUrl}}/api/users/3"
   body:
     type: json
     data: |-

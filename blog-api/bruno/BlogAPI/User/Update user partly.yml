@@ -1,11 +1,11 @@
 info:
   name: Update user partly
   type: http
-  seq: 4
+  seq: 5
 
 http:
   method: PATCH
-  url: "{{baseUrl}}/api/users/1"
+  url: "{{baseUrl}}/api/users/3"
   body:
     type: json
     data: '{"name": "Dung Nguyen test PATCH"}'

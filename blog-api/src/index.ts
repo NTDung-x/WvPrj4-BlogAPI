@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
-import pool from './db.js';
+import prisma from './prisma.js';
 import userRouter from './routes/user.routes.js';
 
 const app = express();
@@ -15,11 +15,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Route health
 app.get('/api/health', async (req: Request, res: Response) => {
-  const [rows] = await pool.query('SELECT 1 + 1 AS result');
-  res.json({ 
-    status: 'OK', 
-    database: 'Connected', 
-    testQuery: rows 
+  const rows = await prisma.$queryRaw<Array<{ result: bigint | number }>>`SELECT 1 + 1 AS result`;
+  res.json({
+    status: 'OK',
+    database: 'Connected',
+    testQuery: rows.map((row) => ({ result: Number(row.result) })),
   });
 });
 
@@ -45,9 +45,8 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // Kiểm tra kết nối
 async function startServer() {
   try{
-    const connection = await pool.getConnection();
-    console.log ('Connected to blog_db on MySQL')
-    connection.release();
+    await prisma.$connect();
+    console.log('Connected to blog_db on MySQL via Prisma');
 
     app.listen(PORT, () => {
       console.log(`Server is running on: http://localhost:${PORT}`);
