@@ -1,11 +1,21 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../prisma.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 const userRouter = Router();
 
+const safeUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  createdAt: true,
+  updatedAt: true,
+};
+
 // Get list các users
 userRouter.get('/', async (req: Request, res: Response) => {
-  const users = await prisma.users.findMany({
+  const users = await prisma.user.findMany({
+    select: safeUserSelect,
     orderBy: { id: 'desc' },
   });
 
@@ -18,7 +28,8 @@ userRouter.get('/', async (req: Request, res: Response) => {
 
 // Get 1 user
 userRouter.get('/:id', async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const id = req.params.id as string;
+
   if (Number.isNaN(id)) {
     return res.status(400).json({
       success: false,
@@ -26,8 +37,9 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
     });
   }
 
-  const user = await prisma.users.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
+    select: safeUserSelect
   });
 
   if (!user) {
@@ -44,42 +56,42 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Create Tạo người dùng mới
-userRouter.post('/', async (req: Request, res: Response) => {
-  const { name, email } = req.body;
+// userRouter.post('/', async (req: Request, res: Response) => {
+//   const { name, email } = req.body;
 
-  if (!name || !email) {
-    return res.status(400).json({
-      success: false,
-      message: 'Tên và email không được bỏ trống',
-    });
-  }
+//   if (!name || !email) {
+//     return res.status(400).json({
+//       success: false,
+//       message: 'Tên và email không được bỏ trống',
+//     });
+//   }
 
-  try {
-    const newUser = await prisma.users.create({
-      data: {
-        name: name.trim(),
-        email: email.trim(),
-      },
-    });
+//   try {
+//     const newUser = await prisma.users.create({
+//       data: {
+//         name: name.trim(),
+//         email: email.trim(),
+//       },
+//     });
 
-    res.status(201).json({
-      success: true,
-      data: newUser,
-    });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
-      return res.status(409).json({
-        success: false,
-        message: 'Email đã được sử dụng',
-      });
-    }
-    throw error;
-  }
-});
+//     res.status(201).json({
+//       success: true,
+//       data: newUser,
+//     });
+//   } catch (error: any) {
+//     if (error.code === 'P2002') {
+//       return res.status(409).json({
+//         success: false,
+//         message: 'Email đã được sử dụng',
+//       });
+//     }
+//     throw error;
+//   }
+// });
 
 // Update toàn bộ thông tin người dùng
-userRouter.put('/:id', async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+userRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
+  const id = req.params.id as string;
   const { name, email } = req.body;
 
   if (Number.isNaN(id)) {
@@ -88,7 +100,15 @@ userRouter.put('/:id', async (req: Request, res: Response) => {
       message: 'ID không hợp lệ',
     });
   }
-  if (!name || !email) {
+
+  if (req.userId !== id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Bạn không thể chỉnh sửa thông tin này'
+    })
+  }
+
+  if (!name?.trim() || !email?.trim()) {
     return res.status(400).json({
       success: false,
       message: 'Tên và email không được bỏ trống',
@@ -96,12 +116,13 @@ userRouter.put('/:id', async (req: Request, res: Response) => {
   }
 
   try {
-    const updatedUser = await prisma.users.update({
+    const updatedUser = await prisma.user.update({
       where: { id },
       data: {
         name: name.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
       },
+      select: safeUserSelect,
     });
 
     res.status(200).json({
@@ -126,8 +147,8 @@ userRouter.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Update 1 phần thông tin
-userRouter.patch('/:id', async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+userRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
+  const id = req.params.id as string;
   const { name, email } = req.body;
 
   if (Number.isNaN(id)) {
@@ -136,7 +157,15 @@ userRouter.patch('/:id', async (req: Request, res: Response) => {
       message: 'ID người dùng không hợp lệ',
     });
   }
-  if (!name && !email) {
+
+  if (req.userId !== id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Bạn không thể chỉnh sửa thông tin này'
+    });
+  }
+
+  if (!name?.trim() && !email?.trim()) {
     return res.status(400).json({
       success: false,
       message: 'Cần cung cấp ít nhất một trường để cập nhật',
@@ -144,13 +173,14 @@ userRouter.patch('/:id', async (req: Request, res: Response) => {
   }
 
   const data: { name?: string; email?: string } = {};
-  if (name) data.name = name.trim();
-  if (email) data.email = email.trim();
-
+  if (name?.trim()) data.name = name.trim();
+  if (email?.trim()) data.email = email.trim().toLowerCase();
+  
   try {
-    const updatedUser = await prisma.users.update({
+    const updatedUser = await prisma.user.update({
       where: { id },
       data,
+      select: safeUserSelect
     });
 
     res.status(200).json({
@@ -175,8 +205,8 @@ userRouter.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // Xóa người dùng
-userRouter.delete('/:id', async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+userRouter.delete('/:id', authenticate, async (req: Request, res: Response) => {
+  const id = req.params.id as string;
   if (Number.isNaN(id)) {
     return res.status(400).json({
       success: false,
@@ -184,12 +214,20 @@ userRouter.delete('/:id', async (req: Request, res: Response) => {
     });
   }
 
+  if (req.userId !== id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Bạn không thể chỉnh sửa thông tin này'
+    })
+  }
+
   try {
-    await prisma.users.delete({
+    await prisma.user.delete({
       where: { id },
     });
-
+  
     res.status(204).send();
+  
   } catch (error: any) {
     if (error.code === 'P2025') {
       return res.status(404).json({

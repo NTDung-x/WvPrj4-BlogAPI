@@ -49,10 +49,10 @@ async function startServer() {
     console.log('Connected to blog_db on MySQL via Prisma');
 
     app.listen(PORT, () => {
-      console.log(`Server is running on: http://localhost:${PORT}`);
+      console.log(`Server đang chạy trên đường dẫn: http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error ('Connection error: ', error);
+    console.error ('Lỗi kết nối: ', error);
     process.exit(1);
   };
 }
