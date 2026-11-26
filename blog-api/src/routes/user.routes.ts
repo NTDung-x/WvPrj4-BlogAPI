@@ -16,7 +16,7 @@ const safeUserSelect = {
 userRouter.get('/', async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     select: safeUserSelect,
-    orderBy: { id: 'desc' },
+    orderBy: { createdAt: 'desc' },
   });
 
   res.status(200).json({
@@ -30,16 +30,9 @@ userRouter.get('/', async (req: Request, res: Response) => {
 userRouter.get('/:id', async (req: Request, res: Response) => {
   const id = req.params.id as string;
 
-  if (Number.isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'ID không hợp lệ',
-    });
-  }
-
   const user = await prisma.user.findUnique({
     where: { id },
-    select: safeUserSelect
+    select: safeUserSelect,
   });
 
   if (!user) {
@@ -55,120 +48,41 @@ userRouter.get('/:id', async (req: Request, res: Response) => {
   });
 });
 
-// Create Tạo người dùng mới
-// userRouter.post('/', async (req: Request, res: Response) => {
-//   const { name, email } = req.body;
-
-//   if (!name || !email) {
-//     return res.status(400).json({
-//       success: false,
-//       message: 'Tên và email không được bỏ trống',
-//     });
-//   }
-
-//   try {
-//     const newUser = await prisma.users.create({
-//       data: {
-//         name: name.trim(),
-//         email: email.trim(),
-//       },
-//     });
-
-//     res.status(201).json({
-//       success: true,
-//       data: newUser,
-//     });
-//   } catch (error: any) {
-//     if (error.code === 'P2002') {
-//       return res.status(409).json({
-//         success: false,
-//         message: 'Email đã được sử dụng',
-//       });
-//     }
-//     throw error;
-//   }
-// });
-
-// Update toàn bộ thông tin người dùng
-userRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
-  const id = req.params.id as string;
-  const { name, email } = req.body;
-
-  if (Number.isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'ID không hợp lệ',
-    });
-  }
-
-  if (req.userId !== id) {
-    return res.status(403).json({
-      success: false,
-      message: 'Bạn không thể chỉnh sửa thông tin này'
-    })
-  }
-
-  if (!name?.trim() || !email?.trim()) {
-    return res.status(400).json({
-      success: false,
-      message: 'Tên và email không được bỏ trống',
-    });
-  }
-
-  try {
-    const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-      },
-      select: safeUserSelect,
-    });
-
-    res.status(200).json({
-      success: true,
-      data: updatedUser,
-    });
-  } catch (error: any) {
-    if (error.code === 'P2025') {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy người dùng',
-      });
-    }
-    if (error.code === 'P2002') {
-      return res.status(409).json({
-        success: false,
-        message: 'Email đã được sử dụng',
-      });
-    }
-    throw error;
-  }
-});
-
-// Update 1 phần thông tin
-userRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
+// Hàm xử lý cập nhật chung cho cả PUT và PATCH (bỏ trống trường nào thì giữ nguyên trường đó)
+async function handleUpdateUser(req: Request, res: Response) {
   const id = req.params.id as string;
   const { name, email } = req.body;
 
   if (req.userId !== id) {
     return res.status(403).json({
       success: false,
-      message: 'Bạn không thể chỉnh sửa thông tin này'
+      message: 'Bạn không thể chỉnh sửa thông tin này',
     });
   }
 
-  if (!name?.trim() && !email?.trim()) {
-    return res.status(400).json({
+  const existingUser = await prisma.user.findUnique({
+    where: { id },
+    select: safeUserSelect,
+  });
+
+  if (!existingUser) {
+    return res.status(404).json({
       success: false,
-      message: 'Cần cung cấp ít nhất một trường để cập nhật',
+      message: 'Không tìm thấy người dùng',
     });
   }
 
   const data: { name?: string; email?: string } = {};
-  if (name?.trim()) data.name = name.trim();
-  if (email?.trim()) data.email = email.trim().toLowerCase();
-  
+  if (typeof name === 'string' && name.trim()) data.name = name.trim();
+  if (typeof email === 'string' && email.trim()) data.email = email.trim().toLowerCase();
+
+  if (Object.keys(data).length === 0) {
+    return res.status(200).json({
+      success: true,
+      data: existingUser,
+    });
+  }
+
   try {
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -181,12 +95,6 @@ userRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
       data: updatedUser,
     });
   } catch (error: any) {
-    if (error.code === 'P2025') {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy người dùng',
-      });
-    }
     if (error.code === 'P2002') {
       return res.status(409).json({
         success: false,
@@ -195,17 +103,14 @@ userRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
     }
     throw error;
   }
-});
+}
+
+userRouter.put('/:id', authenticate, handleUpdateUser);
+userRouter.patch('/:id', authenticate, handleUpdateUser);
 
 // Xóa người dùng
 userRouter.delete('/:id', authenticate, async (req: Request, res: Response) => {
   const id = req.params.id as string;
-  if (Number.isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'ID không hợp lệ',
-    });
-  }
 
   if (req.userId !== id) {
     return res.status(403).json({

@@ -9,7 +9,17 @@ commentRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const { content } = req.body;
 
-  const existingComment = await prisma.comment.findUnique({ where: { id } });
+  const existingComment = await prisma.comment.findUnique({
+    where: { id },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
 
   if (!existingComment) {
     return res.status(404).json({
@@ -22,6 +32,15 @@ commentRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
     return res.status(403).json({
       success: false,
       message: 'Bạn không thể chỉnh sửa bình luận này',
+    });
+  }
+
+  // Nếu bỏ trống hoặc chỉ nhập dấu cách -> giữ nguyên bình luận cũ
+  const trimmedContent = typeof content === 'string' ? content.trim() : '';
+  if (!trimmedContent) {
+    return res.status(200).json({
+      success: true,
+      data: existingComment,
     });
   }
 
