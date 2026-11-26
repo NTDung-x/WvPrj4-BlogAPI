@@ -1,10 +1,15 @@
 import express, { Request, Response, NextFunction } from 'express';
 import 'dotenv/config';
 import prisma from './prisma.js';
+import authRouter from './routes/auth.routes.js';
 import userRouter from './routes/user.routes.js';
+import postRouter from './routes/post.routes.js';
+import commentRouter from './routes/comment.routes.js';
+import categoryRouter from './routes/category.routes.js';
+import tagRouter from './routes/tag.routes.js';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware hệ thống & ghi log
 app.use(express.json());
@@ -23,7 +28,13 @@ app.get('/api/health', async (req: Request, res: Response) => {
   });
 });
 
+// Đăng ký các nhóm API
+app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
+app.use('/api/posts', postRouter);
+app.use('/api/comments', commentRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/tags', tagRouter);
 
 // Middleware lỗi 404, chạy khi không có route nào phía trên khớp với URL
 app.use((req: Request, res: Response) => {

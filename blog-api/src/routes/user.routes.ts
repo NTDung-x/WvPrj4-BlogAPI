@@ -151,13 +151,6 @@ userRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const { name, email } = req.body;
 
-  if (Number.isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'ID người dùng không hợp lệ',
-    });
-  }
-
   if (req.userId !== id) {
     return res.status(403).json({
       success: false,
