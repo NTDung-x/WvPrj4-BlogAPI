@@ -1,0 +1,22 @@
+info:
+  name: Update comment (null data)
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/comments/cmwxcvlup000gwsvljf8qyujl"
+  body:
+    type: json
+    data: |-
+      {
+        "content": "   "
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

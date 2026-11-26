@@ -1,0 +1,20 @@
+info:
+  name: Get list posts by Categories
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/posts?category=Node.js"
+  params:
+    - name: category
+      value: Node.js
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

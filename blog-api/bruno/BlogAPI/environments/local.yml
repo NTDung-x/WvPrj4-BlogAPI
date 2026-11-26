@@ -3,3 +3,6 @@ variables:
   - name: baseUrl
     value: http://localhost:3000
     description: ""
+  - name: accessToken
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXd4YW53aG8wMDAxd3N2bGh4Y280aDhoIiwiaWF0IjoxNzk1Njg1OTc2LCJleHAiOjE3OTU3NzIzNzZ9.uABKoFuZO25AwfJLBMgbQ7vlqFPEM5NnDNdXeID3q9I
+    description: ""

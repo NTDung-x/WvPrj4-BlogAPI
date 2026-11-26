@@ -1,0 +1,22 @@
+info:
+  name: Update comment (valid data)
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/comments/cmwxcvlup000gwsvljf8qyujl"
+  body:
+    type: json
+    data: |-
+      {
+        "content": "123456 2345676 9876546 7 45678 7789 !@#$%^&*()"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

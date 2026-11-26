@@ -1,0 +1,22 @@
+info:
+  name: Update post (no permissions)
+  type: http
+  seq: 10
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/posts/cmwxc8w6r000ewsvltmplv1zr"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "User B sửa bài của User A"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

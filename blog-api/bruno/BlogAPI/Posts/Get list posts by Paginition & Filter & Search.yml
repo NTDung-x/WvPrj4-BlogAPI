@@ -1,0 +1,29 @@
+info:
+  name: Get list posts by Paginition & Filter & Search
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/posts?page=1&limit=5&search=API&tag=nodejs"
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "5"
+      type: query
+    - name: search
+      value: API
+      type: query
+    - name: tag
+      value: nodejs
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

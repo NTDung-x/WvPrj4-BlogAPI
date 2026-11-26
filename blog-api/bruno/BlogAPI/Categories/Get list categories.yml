@@ -1,0 +1,16 @@
+info:
+  name: Get list categories
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/categories"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

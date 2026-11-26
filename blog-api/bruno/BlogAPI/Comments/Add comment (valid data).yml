@@ -1,0 +1,22 @@
+info:
+  name: Add comment (valid data)
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/posts/cmwxc8w6r000ewsvltmplv1zr/comments"
+  body:
+    type: json
+    data: |-
+      {
+        "content": "jandouasdoadhu auo duoa ahuidhauid biu digaidauid  đ à dho ọ "
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

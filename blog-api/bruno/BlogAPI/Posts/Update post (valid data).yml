@@ -1,0 +1,23 @@
+info:
+  name: Update post (valid data)
+  type: http
+  seq: 8
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/posts/cmwxc8w6r000ewsvltmplv1zr"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Blog API (đã cập nhật)",
+        "tags": ["prisma", "mysql"]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

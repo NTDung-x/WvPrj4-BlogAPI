@@ -1,0 +1,26 @@
+info:
+  name: Create post
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/posts"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Blog API",
+        "content": "Nội dung chi tiết",
+        "published": true,
+        "categoryId": "cmwxbvase000cwsvlj5q6mbsx",
+        "tags": ["NodeJS", "typescript", "nodejs"]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
