@@ -24,11 +24,11 @@ model Post {
   slug       String     @unique
   content    String     @db.Text
   published  Boolean    @default(false)
-  author     User       @relation(fields: [authorId], references: [id])
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId   String
   category   Category?  @relation(fields: [categoryId], references: [id])
   categoryId String?
-  tags       Tag[]
+  tags       PostTag[]
   comments   Comment[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
@@ -39,7 +39,7 @@ model Comment {
   content   String   @db.Text
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
   createdAt DateTime @default(now())
 }
@@ -53,5 +53,14 @@ model Category {
 model Tag {
   id    String @id @default(cuid())
   name  String @unique
-  posts Post[]
+  posts PostTag[]
+}
+
+model PostTag {
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  String
+
+  @@id([postId, tagId])
 }

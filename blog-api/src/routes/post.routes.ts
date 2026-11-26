@@ -41,7 +41,9 @@ postRouter.get('/', async (req: Request, res: Response) => {
 
   if (tag) {
     where.tags = {
-      some: { name: tag },
+      some: {
+        tag: { name: tag },
+      },
     };
   }
 
@@ -63,7 +65,9 @@ postRouter.get('/', async (req: Request, res: Response) => {
           },
         },
         category: true,
-        tags: true,
+        tags: {
+          include: { tag: true },
+        },
         _count: {
           select: {
             comments: true,
@@ -100,7 +104,9 @@ postRouter.get('/:id', async (req: Request, res: Response) => {
         },
       },
       category: true,
-      tags: true,
+      tags: {
+        include: { tag: true },
+      },
       comments: {
         include: {
           author: {
@@ -134,7 +140,7 @@ postRouter.get('/:id', async (req: Request, res: Response) => {
 postRouter.post('/', authenticate, async (req: Request, res: Response) => {
   const { title, content, published, categoryId, tags } = req.body;
 
-  if (!title?.trim() || !content?.trim()) {
+  if (typeof title !== 'string' || !title.trim() || typeof content !== 'string' || !content.trim()) {
     return res.status(400).json({
       success: false,
       message: 'Tiêu đề và nội dung không được để trống',
@@ -156,9 +162,13 @@ postRouter.post('/', authenticate, async (req: Request, res: Response) => {
         categoryId: typeof categoryId === 'string' && categoryId.trim() ? categoryId.trim() : null,
         tags: normalizedTags.length
           ? {
-              connectOrCreate: normalizedTags.map((name) => ({
-                where: { name },
-                create: { name },
+              create: normalizedTags.map((name) => ({
+                tag: {
+                  connectOrCreate: {
+                    where: { name },
+                    create: { name },
+                  },
+                },
               })),
             }
           : undefined,
@@ -171,7 +181,9 @@ postRouter.post('/', authenticate, async (req: Request, res: Response) => {
           },
         },
         category: true,
-        tags: true,
+        tags: {
+          include: { tag: true },
+        },
       },
     });
 
@@ -200,7 +212,9 @@ postRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
     include: {
       author: { select: { id: true, name: true } },
       category: true,
-      tags: true,
+      tags: {
+        include: { tag: true },
+      },
     },
   });
 
@@ -245,10 +259,14 @@ postRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
     ];
     if (normalizedTags.length > 0) {
       updateData.tags = {
-        set: [],
-        connectOrCreate: normalizedTags.map((name) => ({
-          where: { name },
-          create: { name },
+        deleteMany: {},
+        create: normalizedTags.map((name) => ({
+          tag: {
+            connectOrCreate: {
+              where: { name },
+              create: { name },
+            },
+          },
         })),
       };
     }
@@ -269,7 +287,9 @@ postRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
       include: {
         author: { select: { id: true, name: true } },
         category: true,
-        tags: true,
+        tags: {
+          include: { tag: true },
+        },
       },
     });
 

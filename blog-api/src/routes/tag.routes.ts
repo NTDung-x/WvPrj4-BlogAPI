@@ -28,9 +28,9 @@ tagRouter.get('/', async (req: Request, res: Response) => {
 
 // Tạo tag mới
 tagRouter.post('/', authenticate, async (req: Request, res: Response) => {
-  const { name } = req.body;
+  const { name } = req.body || {};
 
-  if (!name?.trim()) {
+  if (typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({
       success: false,
       message: 'Tên tag không được bỏ trống',

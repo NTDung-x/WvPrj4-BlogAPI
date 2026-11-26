@@ -26,16 +26,16 @@ categoryRouter.get('/', async (req: Request, res: Response) => {
     });
 });
 
-// Taọ danh mục mới
+// Tạo danh mục mới
 categoryRouter.post('/', authenticate, async (req: Request, res: Response) => {
-    const { name } = req.body;
+  const { name } = req.body || {};
 
-    if (!name?.trim()) {
-        return res.status(400).json({
-            success: false,
-            message: 'Tên danh mục không được bỏ trống'
-        });
-    }
+  if (typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Tên danh mục không được bỏ trống',
+    });
+  }
 
     try {
         const category = await prisma.category.create({

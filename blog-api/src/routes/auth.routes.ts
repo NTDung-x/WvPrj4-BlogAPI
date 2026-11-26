@@ -23,14 +23,21 @@ function generateTokens(userId: string) {
 
 // Đăng ký tài khoản
 authRouter.post('/register', async (req: Request, res: Response) => {
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body || {};
 
-    if (!name?.trim() || !email?.trim() || !password) {
-        return res.status(400).json({
-            success: false,
-            message: 'Tên, email và mật khẩu không được để trống'
-        });
-    }
+  if (
+    typeof name !== 'string' ||
+    !name.trim() ||
+    typeof email !== 'string' ||
+    !email.trim() ||
+    typeof password !== 'string' ||
+    !password
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: 'Tên, email và mật khẩu phải là chuỗi hợp lệ và không được để trống',
+    });
+  }
 
     if (password.length < 6) {
         return res.status(400).json({
@@ -75,9 +82,14 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 
 // Đăng nhập, cấp token
 authRouter.post('/login', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
-  if (!email?.trim() || !password) {
+  if (
+    typeof email !== 'string' ||
+    !email.trim() ||
+    typeof password !== 'string' ||
+    !password
+  ) {
     return res.status(400).json({
       success: false,
       message: 'Email và mật khẩu không được để trống',
@@ -113,17 +125,24 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
 // Cấp lại token
 authRouter.post('/refresh', async (req: Request, res: Response) => {
-    const { refreshToken } = req.body;
+  const { refreshToken } = req.body || {};
 
-    if (!refreshToken) {
-        return res.status(400).json({
-            success: false,
-            message: 'Vui lòng đăng nhập lại (Thiếu refreshToken)'
-        });
+  if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Thiếu refreshToken hợp lệ, vui lòng đăng nhập lại',
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+
+    if (typeof decoded !== 'object' || !decoded || typeof decoded.userId !== 'string') {
+      return res.status(401).json({
+        success: false,
+        message: 'RefreshToken không hợp lệ, vui lòng đăng nhập lại',
+      });
     }
-
-    try {
-        const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
 
         const user = await prisma.user.findUnique({
             where: { id: decoded.userId },
